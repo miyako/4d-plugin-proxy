@@ -13,7 +13,7 @@
 
 ### Discussion
 
-[libproxy](https://github.com/libproxy/libproxy) reads proxy configuration from system configuration or by using WPAD, or [Web Proxy Auto-Discovery Protocol](https://en.wikipedia.org/wiki/Web_Proxy_Auto-Discovery_Protocol)
+[libproxy](https://github.com/libproxy/libproxy) reads proxy configuration from system configuration or by using [Web Proxy Auto-Discovery Protocol](https://en.wikipedia.org/wiki/Web_Proxy_Auto-Discovery_Protocol) and [PAC](https://en.wikipedia.org/wiki/Proxy_auto-config)
 
 ---
 
