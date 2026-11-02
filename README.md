@@ -6,7 +6,7 @@ PROXY tells you which proxy servers to use to reach a given URL. It wraps [libpr
 |---|---|---|
 | [GET PROXIES](#get-proxies) | `ARRAY TEXT` (in parameter 2) | List the proxies to use for a URL, in order of preference |
 
-**Platforms:** macOS, Windows (64-bit)
+**Platforms:** macOS (Apple silicon and Intel), Windows (64-bit)
 
 ---
 
@@ -16,7 +16,6 @@ PROXY tells you which proxy servers to use to reach a given URL. It wraps [libpr
 - **The call blocks until libproxy answers.** Reading the system settings is fast, but when the configuration uses a PAC file that isn't cached yet, libproxy downloads it first, and a PAC script can itself make DNS lookups. The calling 4D process waits for all of this. Call it once and keep the result rather than calling it in a tight loop.
 - **Failure is silent, not a 4D error.** If libproxy can't produce an answer, you get an empty array (size 0) and no 4D error. See [Error handling & troubleshooting](#error-handling--troubleshooting).
 - **Platform support depends on the libproxy build linked into the plugin.** **On macOS**, the plugin links SystemConfiguration and JavaScriptCore, which libproxy uses to read the network settings and to run PAC scripts. **On Windows**, libproxy reads the system (Internet Options) proxy settings; whether this build can evaluate PAC scripts has not been verified.
-- **Universal (Apple silicon) build pending.** Release `1.0` contains an Intel-only macOS binary. The prebuilt `a/libproxy.a` and `a/libmodman.a` have no `arm64` slice, so a universal build needs those libraries rebuilt first.
 - **Preemptive processes:** the manifest doesn't declare the command thread-safe, so expect 4D to treat it as unusable in preemptive processes.
 
 ---
