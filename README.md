@@ -101,3 +101,80 @@ ARRAY TEXT($proxies;0)
 GET PROXIES("http://www.example.com";$proxies)
 // $proxies{1}: "direct://" or "http://host:port", ...
 ```
+
+## Versioning and publication
+
+**Bump version** is manual and source-only. Select an explicit branch in Actions
+(or `gh workflow run bump-version.yml --ref <branch> -f mode=patch`, with `minor`
+and `major` also supported). It checks out the immutable dispatch `github.sha`,
+validates a clean checkout and exact remote branch tip, commits one direct-child
+version change, and pushes only that branch without force or followed tags.
+The mandatory executable `.github/scripts/bump-hooks/pre-push` guard validates
+exactly one advertised update: its old SHA must be the selected SHA and its
+literal new SHA must be HEAD with exactly that one parent. Late advance,
+ancestor rewind, deletion and same-result races fail closed. Missing or
+nonexecutable guards are checked both initially and immediately before push.
+No tag, Build or publication is triggered by a bump.
+
+**Build** is a separate manual, zero-input workflow:
+`gh workflow run release.yml --ref <branch>`. All three checkouts use the
+selected immutable `github.sha`; strict source `X.Y.Z` determines `vX.Y.Z`
+and the `PROXY-X.Y.Z.zip` / `PROXY-X.Y.Z.dmg` assets. There is no tag/push/PR
+trigger or new branch restriction. Publication uses one repository-wide
+cross-branch concurrency group and never cancels a running build.
+
+The original bump workflow header at `7520b20` explicitly promised coordinated
+`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`. Its marketing-first
+implementation left current settings behind through `474df39` (`1.0.3`).
+Source authority is the three marketing settings and source `Info.plist`
+at `1.0.3`; this migration repairs three stale current settings (`1.0.0`) and
+the source English display/info strings (`1.0`) to that existing version,
+without a release increment. Future bumps validate and co-bump all applicable
+literal fields in `PROXY.xcodeproj/project.pbxproj`, `Info.plist` and
+`English.lproj/InfoPlist.strings`. Supported Xcode references stay references;
+absent `CFBundleVersion` stays absent. Other bytes, BOM, line endings and
+permissions are preserved. Prebuilt bundle metadata, 4D data/schema and
+localization counters, manifests, native dependencies and API files are excluded.
+
+Build retains Windows x64 MSBuild (v143 / Windows SDK 10.0 overrides, committed
+`lib/64` dependencies and `ws2_32.lib`), then universal macOS Xcode with committed
+`a/libproxy.a` / `a/libmodman.a`, SystemConfiguration and JavaScriptCore.
+The macOS path keeps prebuilt checks, fresh universal binary/resource verification,
+Windows artifact merge, Developer ID signing/verification, ZIP/DMG packaging,
+both notarization submissions and DMG stapling before publication. The original
+prebuilt path scanner only matches explicit `a/...` or `lib/...` paths; this
+project's libraries use group-relative paths. Xcode linking and universal binary
+verification remain the actual gates; the scanner is not a comprehensive
+architecture audit. Native builds and signing/notarization require their runners
+and credentials and are not run by the Python lifecycle tests.
+
+Signing uses the unchanged secret names `APPLE_DEVELOPER_ID_CERTIFICATE`,
+`APPLE_DEVELOPER_ID_CERTIFICATE_PASSWORD`, `KEYCHAIN_PASSWORD`,
+`NOTARYTOOL_APPLE_ID`, `NOTARYTOOL_TEAM_ID` and `NOTARYTOOL_PASSWORD`.
+
+### Create-only release safety and recovery
+
+Before native work and again after every build/sign/notary/staple gate, publication
+checks the remote tag and authenticated, paginated release list including drafts.
+Every page and entry is validated. Authentication, 404, network, malformed data
+or later-page failures stop publication; only a complete successful no-match
+scan permits creation.
+
+Publication POSTs a new tag ref at the selected SHA (a same-SHA concurrent
+creation also fails), verifies the remote SHA, then POSTs a new public,
+non-prerelease release with the explicit tag, target SHA, name and empty body
+(the original notes policy). Assets are separately POSTed to the newly returned
+release ID. There is no release updater, asset clobber, DELETE, rollback or retry.
+
+If anything fails after creation, **the tag, release and any uploaded assets
+remain**. Inspect the reported selected SHA, tag and release ID in the run log
+and the repository's tags/releases before taking action. A rerun for the same
+version intentionally fails if any tag or draft/published release remains.
+Recovery is an explicit maintainer decision outside automation: retain the
+partial record, or separately investigate and authorize any manual cleanup;
+then choose a new source version through Bump if a new publication is needed.
+Never assume a failed API response means no remote object was created.
+
+Local lifecycle checks (no native/signing execution):
+`python3 -B -m unittest discover -s .github/tests` and
+`actionlint .github/workflows/*.yml`.
