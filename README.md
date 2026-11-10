@@ -104,6 +104,18 @@ GET PROXIES("http://www.example.com";$proxies)
 
 ## Versioning and publication
 
+### Native ownership regression checks
+
+The unsigned, offline ownership harness compiles the actual dispatcher, all
+sixteen class implementations and the complete unchanged bundled SDK:
+`python3 .github/tests/test_ownership.py` on macOS. Proxy discovery, network,
+PAC and platform-path operations are replaced with synthetic boundaries;
+the project/release build is not invoked. See the [audit inventory and
+contracts](.github/tests/ownership-audit.md) for immutable baseline comparison,
+owner balances and explicit SDK OOM, metadata, Windows and 4D-host limits.
+
+### Release operations
+
 **Bump version** is manual and source-only. Select an explicit branch in Actions
 (or `gh workflow run bump-version.yml --ref <branch> -f mode=patch`, with `minor`
 and `major` also supported). It checks out the immutable dispatch `github.sha`,

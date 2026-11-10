@@ -1,0 +1,34 @@
+name: Ownership
+
+on:
+  push:
+    branches: [master, miyako-proxy-ownership-audit]
+    paths:
+      - '4D Plugin API/**'
+      - '4DPlugin.cpp'
+      - '4DPlugin.h'
+      - 'include/proxy.h'
+      - '.github/tests/ownership*'
+      - '.github/tests/test_ownership.py'
+      - '.github/workflows/ownership.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - '4D Plugin API/**'
+      - '4DPlugin.cpp'
+      - '4DPlugin.h'
+      - 'include/proxy.h'
+      - '.github/tests/ownership*'
+      - '.github/tests/test_ownership.py'
+      - '.github/workflows/ownership.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  offline-ownership:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Complete bundled SDK and actual source ASan/UBSan tests (offline)
+        run: python3 .github/tests/test_ownership.py
